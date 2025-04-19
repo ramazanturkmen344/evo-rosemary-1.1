@@ -49,8 +49,9 @@ jobs:
             libtinfo-dev \
             lib32z1-dev \
             libtinfo6 \
-            libncurses6-dev \
-            libncurses-dev
+            libncurses-dev \
+            lib32ncurses5-dev \
+            libncurses5
 
       - name: Initialize repo
         run: |
