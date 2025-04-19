@@ -36,7 +36,7 @@ jobs:
             xsltproc \
             unzip \
             fontconfig \
-            lib32ncurses6-dev \
+            lib32ncurses5-dev \
             python3-venv \
             python3-pip \
             lsb-release \
@@ -85,5 +85,4 @@ jobs:
         run: |
           cd evolutionx
           mkdir -p /artifacts
-          cp out/target/product/rosemary/*.zip /artifacts/
-        continue-on-error: true
+          cp out/target/product/rosemary/*.*
