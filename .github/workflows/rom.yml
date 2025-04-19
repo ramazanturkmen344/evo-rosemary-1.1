@@ -17,18 +17,17 @@ jobs:
         sudo apt-get install -y git curl wget repo python3 unzip bc bison flex build-essential zip gcc libc6-dev \
         lib32ncurses-dev lib32z1-dev liblz4-tool libncurses5 libssl-dev libxml2 libxml2-utils lzop pngcrush \
         schedtool squashfs-tools xsltproc yasm liblzma-dev liblzo2-dev pngquant aria2 rsync tar \
-        libtinfo5 libncurses5 cmake python-is-python3
-        sudo apt-get install -y openjdk-17-jdk
+        libtinfo5 libncurses5 cmake python-is-python3 openjdk-17-jdk
 
     - name: Create working directory
-      run: mkdir evolutionx && cd evolutionx
+      run: mkdir evolutionx
 
     - name: Initialize repo
       run: |
         cd evolutionx
         repo init -u https://github.com/Evolution-X/manifest -b udc --depth=1
 
-    - name: Clone local manifest (device, vendor, kernel)
+    - name: Clone local manifest
       run: |
         mkdir -p evolutionx/.repo/local_manifests
         cat > evolutionx/.repo/local_manifests/roomservice.xml <<EOF
@@ -45,18 +44,18 @@ EOF
         cd evolutionx
         repo sync -c --force-sync --no-clone-bundle --no-tags -j$(nproc --all)
 
-    - name: Setup environment variables
+    - name: Setup environment
       run: |
         cd evolutionx
         source build/envsetup.sh
         lunch evolution_rosemary-userdebug
 
-    - name: Start Build
+    - name: Start build
       run: |
         cd evolutionx
         mka bacon -j$(nproc --all)
 
-    - name: Upload ROM to Artifacts
+    - name: Upload ROM
       if: success()
       uses: actions/upload-artifact@v3
       with:
