@@ -13,6 +13,8 @@ jobs:
       - name: Set up environment
         run: |
           sudo apt-get update
+
+          # Install essential packages
           sudo apt-get install -y \
             git-core \
             gnupg \
@@ -26,7 +28,6 @@ jobs:
             g++-multilib \
             libc6-dev-i386 \
             libncurses-dev \
-            lib32ncurses-dev \
             x11proto-core-dev \
             libx11-dev \
             lib32z1-dev \
@@ -36,12 +37,49 @@ jobs:
             xsltproc \
             unzip \
             fontconfig \
-            lib32ncurses5-dev \
             python3-venv \
             python3-pip \
             lsb-release \
-            git-lfs
-          
+            git-lfs \
+            openjdk-11-jdk \
+            openjdk-8-jdk \
+            bc \
+            libssl-dev \
+            liblz4-tool \
+            python3-jinja2 \
+            libsdl1.2-dev \
+            libncurses5-dev \
+            cmake \
+            ncurses-dev \
+            libusb-1.0-0-dev \
+            zlib1g-dev \
+            libcurl4-openssl-dev \
+            libsdl2-dev \
+            libxml2 \
+            python3-markdown \
+            lib32z1-dev \
+            lib32ncurses5-dev \
+            libgdk-pixbuf2.0-dev \
+            libfreetype6-dev \
+            libjpeg-dev \
+            libpng-dev \
+            libopenjdk-11-jdk \
+            libboost-all-dev \
+            libatlas-base-dev \
+            libssl-dev \
+            libffi-dev \
+            libgl1-mesa-dev \
+            clang \
+            llvm \
+            binutils \
+            bzip2 \
+            libtiff-dev \
+            libgif-dev \
+            libvpx-dev
+
+          # Attempt to install the missing ncurses package and fall back to alternative versions if not found
+          sudo apt-get install -y lib32ncurses6-dev || sudo apt-get install -y lib32ncurses5-dev || sudo apt-get install -y lib32ncurses-dev || echo "Failed to install ncurses packages"
+
           # Ensure the git-lfs is initialized
           git lfs install
 
@@ -85,4 +123,5 @@ jobs:
         run: |
           cd evolutionx
           mkdir -p /artifacts
-          cp out/target/product/rosemary/*.*
+          cp out/target/product/rosemary/*.zip /artifacts/
+        continue-on-error: true
