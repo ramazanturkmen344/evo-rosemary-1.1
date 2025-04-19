@@ -46,9 +46,11 @@ jobs:
             zlib1g-dev \
             libxml2-utils \
             liblz4-tool \
-            libtinfo5 \
             libtinfo-dev \
-            lib32z1-dev
+            lib32z1-dev \
+            libtinfo6 \
+            libncurses6-dev \
+            libncurses-dev
 
       - name: Initialize repo
         run: |
