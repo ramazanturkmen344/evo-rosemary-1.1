@@ -36,7 +36,7 @@ jobs:
             gcc-multilib \
             gnupg \
             gperf \
-            libncurses5-dev \
+            libncurses-dev \
             libssl-dev \
             lzop \
             pngcrush \
@@ -49,9 +49,12 @@ jobs:
             libtinfo-dev \
             lib32z1-dev \
             libtinfo6 \
-            libncurses-dev \
-            lib32ncurses5-dev \
-            libncurses5
+            libncurses6-dev \
+            libncurses5-dev \
+            lib32ncurses-dev \
+            lib32ncurses6-dev \
+            ncurses-base \
+            ncurses-term
 
       - name: Initialize repo
         run: |
