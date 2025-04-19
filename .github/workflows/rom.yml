@@ -1,4 +1,4 @@
-name: Build EvolutionX for rosemary
+name: Evolution X Build (Android 14)
 
 on:
   workflow_dispatch:
@@ -6,58 +6,73 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        
+      - name: Set up Java 17
+        run: |
+          sudo apt update
+          sudo apt install openjdk-17-jdk -y
+          java -version
 
-    - name: Set up environment
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git curl wget repo python3 unzip bc bison flex build-essential zip gcc libc6-dev \
-        lib32ncurses-dev lib32z1-dev liblz4-tool libncurses5 libssl-dev libxml2 libxml2-utils lzop pngcrush \
-        schedtool squashfs-tools xsltproc yasm liblzma-dev liblzo2-dev pngquant aria2 rsync tar \
-        libtinfo5 libncurses5 cmake python-is-python3 openjdk-17-jdk
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            git \
+            repo \
+            curl \
+            wget \
+            zip \
+            unzip \
+            bc \
+            bison \
+            build-essential \
+            ccache \
+            clang \
+            flex \
+            g++-multilib \
+            gcc-multilib \
+            gnupg \
+            gperf \
+            libncurses5-dev \
+            libssl-dev \
+            lzop \
+            pngcrush \
+            schedtool \
+            squashfs-tools \
+            xsltproc \
+            zlib1g-dev \
+            libxml2-utils \
+            liblz4-tool \
+            libtinfo5 \
+            libtinfo-dev \
+            lib32z1-dev
 
-    - name: Create working directory
-      run: mkdir evolutionx
+      - name: Initialize repo
+        run: |
+          mkdir -p ~/.repo
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.repo/repo
+          chmod a+x ~/.repo/repo
 
-    - name: Initialize repo
-      run: |
-        cd evolutionx
-        repo init -u https://github.com/Evolution-X/manifest -b udc --depth=1
+      - name: Repo sync (Evolution X)
+        run: |
+          mkdir evolutionx
+          cd evolutionx
+          repo init -u https://github.com/Evolution-X/android.git -b thirteen --depth=1
+          git clone https://github.com/Evolution-X-Devices/device_xiaomi_rosemary -b udc device/xiaomi/rosemary
+          git clone https://github.com/TheMuppets/proprietary_vendor_xiaomi -b udc vendor/xiaomi/rosemary
+          git clone https://github.com/xdt-devs/kernel_xiaomi_mt6785 -b udc kernel/xiaomi/rosemary
+          repo sync -j4
 
-    - name: Clone local manifest
-      run: |
-        mkdir -p evolutionx/.repo/local_manifests
-        cat > evolutionx/.repo/local_manifests/roomservice.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<manifest>
-  <project name="rosemary-devs/android_device_xiaomi_rosemary" path="device/xiaomi/rosemary" remote="github" revision="14.0" />
-  <project name="RedmiNote10S/proprietary_vendor_redmi_rosemary" path="vendor/xiaomi/rosemary" remote="github" revision="main" />
-  <project name="RedmiNote10S/android_kernel_redmi_rosemary" path="kernel/xiaomi/rosemary" remote="github" revision="main" />
-</manifest>
-EOF
+      - name: Set up build environment
+        run: |
+          cd evolutionx
+          source build/envsetup.sh
+          lunch evolution_rosemary-userdebug
 
-    - name: Sync source
-      run: |
-        cd evolutionx
-        repo sync -c --force-sync --no-clone-bundle --no-tags -j$(nproc --all)
-
-    - name: Setup environment
-      run: |
-        cd evolutionx
-        source build/envsetup.sh
-        lunch evolution_rosemary-userdebug
-
-    - name: Start build
-      run: |
-        cd evolutionx
-        mka bacon -j$(nproc --all)
-
-    - name: Upload ROM
-      if: success()
-      uses: actions/upload-artifact@v3
-      with:
-        name: EvolutionX-ROM
-        path: evolutionx/out/target/product/rosemary/*.zip
+      - name: Start building
+        run: |
+          cd evolutionx
+          mka bacon
