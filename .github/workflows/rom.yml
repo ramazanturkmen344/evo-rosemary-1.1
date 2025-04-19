@@ -1,4 +1,4 @@
-name: Build Evolution X for rosemary
+name: Build EvolutionX for rosemary
 
 on:
   workflow_dispatch:
@@ -6,117 +6,59 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v3
 
-      - name: Set up environment
-        run: |
-          sudo apt-get update
+    - name: Set up environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git curl wget repo python3 unzip bc bison flex build-essential zip gcc libc6-dev \
+        lib32ncurses-dev lib32z1-dev liblz4-tool libncurses5 libssl-dev libxml2 libxml2-utils lzop pngcrush \
+        schedtool squashfs-tools xsltproc yasm liblzma-dev liblzo2-dev pngquant aria2 rsync tar \
+        libtinfo5 libncurses5 cmake python-is-python3
+        sudo apt-get install -y openjdk-17-jdk
 
-          # Install essential packages
-          sudo apt-get install -y \
-            git-core \
-            gnupg \
-            flex \
-            bison \
-            build-essential \
-            zip \
-            curl \
-            zlib1g-dev \
-            gcc-multilib \
-            g++-multilib \
-            libc6-dev-i386 \
-            libncurses-dev \
-            x11proto-core-dev \
-            libx11-dev \
-            lib32z1-dev \
-            ccache \
-            libgl1-mesa-dev \
-            libxml2-utils \
-            xsltproc \
-            unzip \
-            fontconfig \
-            python3-venv \
-            python3-pip \
-            lsb-release \
-            git-lfs \
-            openjdk-8-jdk \
-            openjdk-17-jdk \
-            bc \
-            libssl-dev \
-            liblz4-tool \
-            python3-jinja2 \
-            libsdl1.2-dev \
-            cmake \
-            ncurses-dev \
-            libusb-1.0-0-dev \
-            zlib1g-dev \
-            libcurl4-openssl-dev \
-            libsdl2-dev \
-            libxml2 \
-            python3-markdown \
-            lib32z1-dev \
-            libgdk-pixbuf2.0-dev \
-            libfreetype6-dev \
-            libjpeg-dev \
-            libpng-dev \
-            libboost-all-dev \
-            libatlas-base-dev \
-            libffi-dev \
-            clang \
-            llvm \
-            binutils \
-            bzip2 \
-            libtiff-dev \
-            libgif-dev \
-            libvpx-dev
+    - name: Create working directory
+      run: mkdir evolutionx && cd evolutionx
 
-          # Install alternative ncurses package versions
-          sudo apt-get install -y lib32ncurses6-dev || sudo apt-get install -y lib32ncurses-dev || echo "Failed to install ncurses packages"
+    - name: Initialize repo
+      run: |
+        cd evolutionx
+        repo init -u https://github.com/Evolution-X/manifest -b udc --depth=1
 
-          # Ensure the git-lfs is initialized
-          git lfs install
+    - name: Clone local manifest (device, vendor, kernel)
+      run: |
+        mkdir -p evolutionx/.repo/local_manifests
+        cat > evolutionx/.repo/local_manifests/roomservice.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <project name="rosemary-devs/android_device_xiaomi_rosemary" path="device/xiaomi/rosemary" remote="github" revision="14.0" />
+  <project name="RedmiNote10S/proprietary_vendor_redmi_rosemary" path="vendor/xiaomi/rosemary" remote="github" revision="main" />
+  <project name="RedmiNote10S/android_kernel_redmi_rosemary" path="kernel/xiaomi/rosemary" remote="github" revision="main" />
+</manifest>
+EOF
 
-      - name: Install repo tool
-        run: |
-          curl https://storage.googleapis.com/git-repo-downloads/repo > repo
-          chmod +x repo
-          sudo mv repo /usr/local/bin/
+    - name: Sync source
+      run: |
+        cd evolutionx
+        repo sync -c --force-sync --no-clone-bundle --no-tags -j$(nproc --all)
 
-      - name: Initialize repo
-        run: |
-          mkdir evolutionx
-          cd evolutionx
-          repo init -u https://github.com/Evolution-X/manifest -b vic --git-lfs
-          mkdir -p .repo/local_manifests
-          echo '<?xml version="1.0" encoding="UTF-8"?>
-          <manifest>
-            <project name="Evolution-X-Devices/device_xiaomi_rosemary" path="device/xiaomi/rosemary" remote="github" revision="main"/>
-            <project name="RedmiNote10S/android_vendor_xiaomi_rosemary" path="vendor/xiaomi/rosemary" remote="github" revision="main"/>
-            <project name="RedmiNote10S/android_kernel_redmi_rosemary" path="kernel/xiaomi/rosemary" remote="github" revision="main"/>
-          </manifest>' > .repo/local_manifests/roomservice.xml
+    - name: Setup environment variables
+      run: |
+        cd evolutionx
+        source build/envsetup.sh
+        lunch evolution_rosemary-userdebug
 
-      - name: Sync source
-        run: |
-          cd evolutionx
-          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags || true
-          # Retry sync if initial sync fails
-          if [ $? -ne 0 ]; then
-            echo "Repo sync failed, retrying..."
-            repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
-          fi
+    - name: Start Build
+      run: |
+        cd evolutionx
+        mka bacon -j$(nproc --all)
 
-      - name: Build ROM
-        run: |
-          cd evolutionx
-          source build/envsetup.sh
-          lunch evolution_rosemary-userdebug
-          m evolution
-
-      - name: Archive build
-        run: |
-          cd evolutionx
-          mkdir -p /artifacts
-          cp out/target/product/rosemary/*.zip /artifacts/
-        continue-on-error: true
+    - name: Upload ROM to Artifacts
+      if: success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: EvolutionX-ROM
+        path: evolutionx/out/target/product/rosemary/*.zip
