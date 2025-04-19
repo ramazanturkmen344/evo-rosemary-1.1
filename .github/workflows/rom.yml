@@ -36,7 +36,6 @@ jobs:
             gcc-multilib \
             gnupg \
             gperf \
-            libncurses-dev \
             libssl-dev \
             lzop \
             pngcrush \
@@ -49,24 +48,25 @@ jobs:
             libtinfo-dev \
             lib32z1-dev \
             libtinfo6 \
-            lib32ncurses5-dev \
-            libncurses5-dev \
-            lib32ncurses6-dev \
-            libncurses6-dev \
-            ncurses-base \
-            ncurses-term \
             openjdk-11-jdk \
             lib32stdc++6 \
             lib32gcc1 \
-            lib32ncurses5 \
             libxml2 \
             libtool \
             bzr \
             rsync \
-            libssl-dev \
             automake \
             autoconf \
-            libncurses5
+            ncurses-base \
+            ncurses-term \
+            lib32ncurses5-dev \
+            lib32ncurses6-dev \
+            libncurses6-dev
+
+      - name: Manually add older repositories for ncurses5
+        run: |
+          echo "deb http://archive.ubuntu.com/ubuntu/ bionic main universe" | sudo tee -a /etc/apt/sources.list
+          sudo apt update
 
       - name: Initialize repo
         run: |
