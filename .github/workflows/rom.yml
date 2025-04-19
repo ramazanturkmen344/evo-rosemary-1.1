@@ -17,11 +17,9 @@ jobs:
 
       - name: Install repo tool
         run: |
-          mkdir -p ~/bin
-          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-          chmod a+x ~/bin/repo
-          echo "export PATH=~/bin:$PATH" >> ~/.bashrc
-          source ~/.bashrc
+          curl https://storage.googleapis.com/git-repo-downloads/repo > repo
+          chmod +x repo
+          sudo mv repo /usr/local/bin/
 
       - name: Initialize repo
         run: |
