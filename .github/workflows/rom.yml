@@ -49,12 +49,24 @@ jobs:
             libtinfo-dev \
             lib32z1-dev \
             libtinfo6 \
-            libncurses6-dev \
+            lib32ncurses5-dev \
             libncurses5-dev \
-            lib32ncurses-dev \
             lib32ncurses6-dev \
+            libncurses6-dev \
             ncurses-base \
-            ncurses-term
+            ncurses-term \
+            openjdk-11-jdk \
+            lib32stdc++6 \
+            lib32gcc1 \
+            lib32ncurses5 \
+            libxml2 \
+            libtool \
+            bzr \
+            rsync \
+            libssl-dev \
+            automake \
+            autoconf \
+            libncurses5
 
       - name: Initialize repo
         run: |
